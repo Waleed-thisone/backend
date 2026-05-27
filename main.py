@@ -33,7 +33,7 @@ async def health():
         raise HTTPException(status_code=503, detail=str(exc)) from exc
 
 
-@app.get("/status", methods=["GET", "HEAD"])
+@app.api_route("/status", methods=["GET", "HEAD"])
 async def status():
     try:
         data = storage.load()
