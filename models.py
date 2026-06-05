@@ -1,6 +1,6 @@
 from typing import List, Literal, Optional
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, model_validator
 
 
 BotType = Literal["spot_grid", "futures_grid"]
@@ -22,13 +22,17 @@ class SettingsUpdateRequest(BaseModel):
     stop_threshold_pct: float = Field(gt=0, le=100)
     restart_threshold_pct: float = Field(gt=0, le=100)
 
-    @field_validator("restart_threshold_pct")
-    @classmethod
-    def restart_must_be_below_stop(cls, restart_pct: float, info):
-        stop_pct = info.data.get("stop_threshold_pct")
-        if stop_pct is not None and restart_pct >= stop_pct:
-            raise ValueError("restart_threshold_pct must be less than stop_threshold_pct")
-        return restart_pct
+    @model_validator(mode="after")
+    def validate_thresholds(self):
+        if self.bot_type == "spot_grid" and self.restart_threshold_pct >= self.stop_threshold_pct:
+            raise ValueError(
+                "For spot grid, restart_threshold_pct must be less than stop_threshold_pct"
+            )
+        if self.bot_type == "futures_grid" and self.restart_threshold_pct < self.stop_threshold_pct:
+            raise ValueError(
+                "For futures grid, restart_threshold_pct must be >= stop_threshold_pct"
+            )
+        return self
 
 
 class BotResponse(BaseModel):

@@ -25,8 +25,8 @@ DEFAULTS = {
         "restart_threshold_pct": float(os.getenv("DEFAULT_RESTART_THRESHOLD_PCT", "2.0")),
     },
     "futures_grid": {
-        "stop_threshold_pct": float(os.getenv("DEFAULT_FUTURES_STOP_THRESHOLD_PCT", "5.0")),
-        "restart_threshold_pct": float(os.getenv("DEFAULT_FUTURES_RESTART_THRESHOLD_PCT", "3.0")),
+        "stop_threshold_pct": float(os.getenv("DEFAULT_FUTURES_STOP_THRESHOLD_PCT", "2.0")),
+        "restart_threshold_pct": float(os.getenv("DEFAULT_FUTURES_RESTART_THRESHOLD_PCT", "2.0")),
     },
 }
 
@@ -273,8 +273,14 @@ def get_settings_for_type(bot_type: str) -> Dict[str, Any]:
 
 def update_settings(bot_type: str, stop_pct: float, restart_pct: float) -> Dict[str, Any]:
     bot_type = _validate_bot_type(bot_type)
-    if stop_pct <= restart_pct:
-        raise ValueError("stop_threshold_pct must be greater than restart_threshold_pct")
+    if bot_type == "spot_grid" and stop_pct <= restart_pct:
+        raise ValueError(
+            "For spot grid, stop_threshold_pct must be greater than restart_threshold_pct"
+        )
+    if bot_type == "futures_grid" and restart_pct < stop_pct:
+        raise ValueError(
+            "For futures grid, restart_threshold_pct must be >= stop_threshold_pct"
+        )
 
     with get_session() as session:
         settings = session.get(BotTypeSettings, bot_type)
