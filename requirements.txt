@@ -3,3 +3,5 @@ uvicorn
 apscheduler
 httpx
 python-dotenv
+pybit==5.14.0
+sqlalchemy>=2.0

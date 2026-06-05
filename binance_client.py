@@ -5,7 +5,7 @@ import httpx
 
 logger = logging.getLogger(__name__)
 
-BINANCE_KLINES_URL = "https://api.binance.us/api/v3/klines"
+BINANCE_KLINES_URL = "https://api.binance.com/api/v3/klines"
 
 
 async def get_prices() -> Tuple[float, float]:

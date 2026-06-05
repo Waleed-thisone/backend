@@ -1,5 +1,7 @@
 .env
 state.json
+btc_alert.db
+*.db-journal
 __pycache__/
 *.py[cod]
 .venv/
