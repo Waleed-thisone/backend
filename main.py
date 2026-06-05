@@ -1,7 +1,8 @@
+import os
 from contextlib import asynccontextmanager
 
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 
 import bybit_client
@@ -21,6 +22,9 @@ from models import (
 
 load_dotenv()
 
+API_AUTH_TOKEN = os.getenv("API_AUTH_TOKEN")
+PUBLIC_PATHS = {"/health"}
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -32,6 +36,31 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="BTC Alert Backend", lifespan=lifespan)
+
+
+@app.middleware("http")
+async def require_api_token(request: Request, call_next):
+    if request.url.path in PUBLIC_PATHS:
+        return await call_next(request)
+
+    if not API_AUTH_TOKEN:
+        return JSONResponse(
+            status_code=503,
+            content={"detail": "API authentication is not configured"},
+        )
+
+    auth_header = request.headers.get("Authorization", "")
+    if not auth_header.startswith("Bearer "):
+        return JSONResponse(
+            status_code=401,
+            content={"detail": "Missing or invalid authorization header"},
+        )
+
+    token = auth_header.removeprefix("Bearer ").strip()
+    if token != API_AUTH_TOKEN:
+        return JSONResponse(status_code=401, content={"detail": "Invalid token"})
+
+    return await call_next(request)
 
 
 @app.get("/health")
