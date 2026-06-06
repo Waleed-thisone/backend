@@ -23,7 +23,7 @@ from models import (
 load_dotenv()
 
 API_AUTH_TOKEN = os.getenv("API_AUTH_TOKEN")
-PUBLIC_PATHS = {"/health"}
+PUBLIC_PATHS = {"/health", "/status"}
 
 
 @asynccontextmanager
