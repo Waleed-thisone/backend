@@ -1,4 +1,5 @@
 import logging
+from typing import Optional
 
 import bybit_client
 import database
@@ -95,7 +96,7 @@ async def _handle_futures_grid(pct_change: float) -> None:
         database.set_bots_stopped_for_alert("futures_grid", False)
 
 
-async def check_and_act(pct_change: float) -> None:
+async def check_and_act(pct_change_12h: float, pct_change_1h: Optional[float] = None) -> None:
     if not bybit_client.is_configured():
         return
 
@@ -103,11 +104,14 @@ async def check_and_act(pct_change: float) -> None:
     alert_active = bool(state and state.get("alert"))
 
     try:
-        await _handle_spot_grid(pct_change, alert_active)
+        await _handle_spot_grid(pct_change_12h, alert_active)
     except Exception:
         logger.exception("Stop/restart check failed for spot_grid bots")
 
+    if pct_change_1h is None:
+        return
+
     try:
-        await _handle_futures_grid(pct_change)
+        await _handle_futures_grid(pct_change_1h)
     except Exception:
         logger.exception("Stop/restart check failed for futures_grid bots")
